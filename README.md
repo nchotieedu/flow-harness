@@ -13,10 +13,21 @@ Postgres + Drizzle (durable event log) · Express + one WebSocket.
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars   # then fill in OPENAI_API_KEY
+cp .dev.vars.example .dev.vars   # then fill in GLM_API_KEY (or another provider's key)
 ```
 
 Requires a local Postgres with a `flow_harness` database (`createdb flow_harness`).
+
+## Switching models
+
+Pure config in `.dev.vars` — no code changes:
+
+```bash
+MODEL_PROVIDER=glm       # glm | openai | custom (any OpenAI-compatible endpoint)
+MODEL_ID=glm-5.3-flash
+GLM_API_KEY=...          # from z.ai (international) or bigmodel.cn (mainland)
+# GLM_BASE_URL=https://api.z.ai/api/paas/v4
+```
 
 ## Run
 

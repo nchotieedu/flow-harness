@@ -1,7 +1,19 @@
 # Copy to .dev.vars and fill in.
-# OPENAI_API_KEY  — required (the provider reads it at request time).
-# DATABASE_URL    — your local Postgres. DBOS needs the DIRECT connection.
-# MODEL_ID        — optional override (default: gpt-5.5).
+#
+# The model is switchable without code changes (see harness/model.ts):
+#   MODEL_PROVIDER = glm | openai | custom
+#   MODEL_ID       = the model name, e.g. glm-5.3-flash
+#
+# glm:    GLM_API_KEY (from z.ai or bigmodel.cn), optional GLM_BASE_URL
+# openai: OPENAI_API_KEY
+# custom: CUSTOM_BASE_URL (+ optional CUSTOM_API_KEY), e.g. LM Studio/Ollama/OpenRouter
 
-OPENAI_API_KEY=sk-...
+MODEL_PROVIDER=glm
+MODEL_ID=glm-5.3-flash
+GLM_API_KEY=your-glm-key
+# GLM_BASE_URL=https://api.z.ai/api/paas/v4
+# OPENAI_API_KEY=sk-...
+# CUSTOM_BASE_URL=http://localhost:1234/v1
+# CUSTOM_API_KEY=
+
 DATABASE_URL=postgresql://cliford@localhost:5432/flow_harness
