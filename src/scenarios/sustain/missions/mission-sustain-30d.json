@@ -1,0 +1,99 @@
+{
+  "name": "mission-sustain-30d",
+  "horizonDays": 30,
+  "budgetUnits": 140,
+  "goal": "Keep flow-harness healthy for 30 simulated days: typecheck and sandbox tests green at every checkpoint, every requirement implemented with independent verification, no budget overrun. Evolution over stability is fine — a broken mainline is not.",
+  "entries": [
+    {
+      "day": 1,
+      "id": "req_001",
+      "kind": "requirement",
+      "title": "Document the six-role sustain scenario in ARCHITECTURE.md",
+      "detail": "Add a section to ARCHITECTURE.md describing the sustain scenario: six functional roles, the isolated workspace, verification gate. Keep it under 40 lines."
+    },
+    {
+      "day": 2,
+      "id": "req_002",
+      "kind": "requirement",
+      "title": "Add a 'mission' npm script",
+      "detail": "package.json should have \"mission\": \"tsx scripts/submit.ts\" so a mission run is npm run mission. Verify typecheck still passes."
+    },
+    {
+      "day": 4,
+      "id": "req_003",
+      "kind": "requirement",
+      "title": "README quickstart: document SIM_DAYS and SIM_DAY_MS",
+      "detail": "The horizon is configurable. Add a short 'Running a mission' section to README.md explaining SIM_DAYS (horizon) and SIM_DAY_MS (pacing) with one example command."
+    },
+    {
+      "day": 6,
+      "id": "inc_001",
+      "kind": "incident",
+      "title": "Typecheck regression reported in the sandbox demo",
+      "detail": "A report claims npm run test:sandbox no longer passes after recent workspace changes. Reproduce it, find the actual cause, fix whatever is actually broken. The report may be wrong — verify before acting."
+    },
+    {
+      "day": 8,
+      "id": "req_004",
+      "kind": "requirement",
+      "title": "Design note: workspace retention policy",
+      "detail": "Workspaces under .workspaces/ accumulate forever. Architect a retention policy (keep last N run workspaces, archive or delete older). Write docs/design/workspace-retention.md — do NOT implement it yet."
+    },
+    {
+      "day": 10,
+      "id": "req_005",
+      "kind": "requirement",
+      "title": "Implement the workspace retention command",
+      "detail": "Implement the design from req_004 as a script scripts/prune-workspaces.ts (default: keep 5 most recent). Wire it as npm run prune. The design doc must stay in sync with what was actually built."
+    },
+    {
+      "day": 12,
+      "id": "req_006",
+      "kind": "requirement",
+      "title": "Inspector: list mission event types",
+      "detail": "Add a 'mission' summary section to scripts/inspect-log.ts output: count of requirement.changed, incident.raised, verification.passed/failed/challenged, budget.charged events."
+    },
+    {
+      "day": 15,
+      "id": "req_007",
+      "kind": "requirement",
+      "title": "CONTRIBUTING: how to add a mission",
+      "detail": "Add a 'Adding a mission' section to CONTRIBUTING.md: the JSON shape, where files live, and the rule that every entry must be verifiable by a mechanical check."
+    },
+    {
+      "day": 17,
+      "id": "inc_002",
+      "kind": "incident",
+      "title": "Budget overrun alarm",
+      "detail": "Monitoring reports the mission is burning budget faster than planned (units per day above plan). Investigate where the budget actually went using the event log, report the top consumers, and adjust the mission's remaining plan if justified."
+    },
+    {
+      "day": 20,
+      "id": "req_008",
+      "kind": "requirement",
+      "title": "Migrate mission state schema to v2",
+      "detail": "sim/mission-state.json gets a v2 schema: { version: 2, goal, day, priorities: [{id, rank, status}], blocked: [] }. Write a migration path: existing v1 files must still load (detect by missing 'version'). Document in the coordinator prompt or docs."
+    },
+    {
+      "day": 23,
+      "id": "req_009",
+      "kind": "requirement",
+      "title": "Sandbox demo must state its limits",
+      "detail": "The sandbox test output should print a one-line honest statement that node:vm is not a security boundary. Update src/scenarios (or scripts/test-sandbox.ts path) so npm run test:sandbox prints it on success."
+    },
+    {
+      "day": 26,
+      "id": "req_010",
+      "kind": "requirement",
+      "title": "Research log: entry for the sustain run itself",
+      "detail": "Append entry 003 to docs/research-log.md summarizing THIS mission run so far: verification pass rate, budget burn, incidents handled. Use the event log as the source — the entry must match reality."
+    },
+    {
+      "day": 29,
+      "id": "req_011",
+      "kind": "requirement",
+      "title": "Final audit: close the loop",
+      "detail": "Verify every requirement req_001..req_010 is actually present in the workspace (not just claimed): check files exist, scripts exist, docs sections exist. Report a table: requirement → evidence → verdict."
+    }
+  ]
+}

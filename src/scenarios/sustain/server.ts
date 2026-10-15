@@ -7,8 +7,8 @@ import { createServer } from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
 import { ensureSchema, clearEventLog } from "@harness/db";
 import { subscribe, history } from "@harness/bus";
-import { runAgentWorkflow } from "./workflows";
-import { runSupervisorWorkflow } from "./workflows";
+import { sustainMissionWorkflow } from "./workflows";
+import { DEFAULT_MISSION } from "./mission";
 import type { ClientMessage } from "@harness/events";
 
 const PORT = Number(process.env.PORT ?? 8797);
@@ -33,14 +33,11 @@ async function main() {
   });
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
-  // Clear the durable log. The inspector calls this, then reloads.
   app.post("/api/clear", async (_req, res) => {
     await clearEventLog();
     res.json({ ok: true });
   });
 
-  // Human-in-the-loop: deliver an approval decision to a suspended workflow.
-  // DBOS.send wakes its recv() — even days later, even after a restart.
   app.post("/api/approve/:workflowId", async (req, res) => {
     const approved = Boolean(req.body?.approved);
     await DBOS.send(req.params.workflowId, { approved }, "approval");
@@ -50,7 +47,6 @@ async function main() {
   const server = createServer(app);
   const wss = new WebSocketServer({ server, path: "/ws" });
 
-  // Forward every emitted event to all connected inspectors.
   subscribe((event) => {
     const data = JSON.stringify(event);
     for (const client of wss.clients) {
@@ -59,8 +55,6 @@ async function main() {
   });
 
   wss.on("connection", async (socket: WebSocket) => {
-    // Register the message handler FIRST — history() is an async DB read, and the
-    // client sends as soon as it connects.
     socket.on("message", async (raw) => {
       let message: ClientMessage;
       try {
@@ -68,25 +62,22 @@ async function main() {
       } catch {
         return;
       }
-
       if (message.type === "submit_task") {
-        // Pick the runtime: the single-agent loop, or the supervisor.
-        const workflow =
-          message.mode === "supervised" ? runSupervisorWorkflow : runAgentWorkflow;
-        await DBOS.startWorkflow(workflow)(message.input);
+        const missionName = message.input?.trim() || DEFAULT_MISSION;
+        await DBOS.startWorkflow(sustainMissionWorkflow)(missionName);
       }
     });
 
-    // Replay the durable timeline (including a workflow DBOS is recovering).
-    for (const event of await history()) socket.send(JSON.stringify(event));
+    socket.send(JSON.stringify({ type: "history", events: await history() }));
   });
 
   server.listen(PORT, () => {
     console.log(`harness server listening on http://localhost:${PORT}  (ws: /ws)`);
+    console.log(`mission queue: submit a mission name (default: ${DEFAULT_MISSION})`);
   });
 }
 
 main().catch((error) => {
-  console.error("failed to start:", error);
+  console.error("server failed:", error);
   process.exit(1);
 });

@@ -1,8 +1,10 @@
 # Architecture
 
 flow-harness is a **research instrument**: a minimal but production-grade agent
-runtime (the *harness*) plus a scenario that stresses it (the *Flow company*).
-The library is the boundary: `src/harness` knows nothing about Flow, and every
+runtime (the *harness*) plus a scenario that stresses it (**sustain**: six
+functional agents keeping an application alive under changing requirements).
+The library is the boundary: `src/harness` knows nothing about the scenario,
+and every
 new capability lands as a swappable module, not a fork of the loop.
 
 ## Layers
@@ -12,8 +14,8 @@ new capability lands as a swappable module, not a fork of the loop.
 │  experiments/ + docs/      research: hypothesis → result    │
 ├─────────────────────────────────────────────────────────────┤
 │  src/scenarios/<name>      a world for agents to live in    │
-│    flow/   agents · tools · investigators · workflows       │
-│            (binds harness factories to the Flow company)    │
+│    sustain/ roles · tools · missions · workflows            │
+│            (binds harness pieces to the six-role mission)   │
 ├─────────────────────────────────────────────────────────────┤
 │  src/harness               THE RESEARCH ARTIFACT (generic)  │
 │    runtime      durable agent loop: model ⇄ tools ⇄ handoff │
@@ -40,6 +42,10 @@ workflows without touching runtime code:
 |---|---|---|
 | `createAgentWorkflow()` | `agents`, `entryAgent`, `runTool`, `needsApproval?`, `maxSteps?` | durable loop with memory compaction, handoff interception, HITL suspend/resume |
 | `createSupervisorWorkflow()` | `departments`, `runInvestigator`, optional plan/synthesis prompts | plan → parallel sub-agents → fan-in → synthesis |
+| `provisionWorkspace()` / `attachWorkspace()` | run id, source dir, setup commands | isolated real-git workspace; checkpoints = commits |
+| `createVerifierWorkflow()` | `runChecks`, judge prompt | independent verification: mechanical checks + judgment, verdicts as events |
+| `createBudget()` / `chargeStep()` | limit | durable compute accounting with hard stop |
+| SimClock (`SIM_DAYS`, `SIM_DAY_MS`) | env | configurable horizon + durable pacing |
 
 Planned seams (add the factory when the first experiment needs it — not before):
 
@@ -71,13 +77,15 @@ See [README](README.md) for setup. Entry points:
 - `npm run submit` — one task through the scenario (CLI)
 - `npm run dev` — server + ws for an inspector
 - `npm run inspect` — read the durable event log
-- `src/scenarios/flow/workflows.ts` — where Flow binds to the harness
+- `src/scenarios/sustain/workflows.ts` — the mission loop (day cycle: plan → roles → verify → checkpoint)
 
 ## Open-source expansion path
 
 1. **Now:** single package, scenario-as-example, Apache-2.0, research log.
-2. **Next:** extract scenarios into examples; publish `@flow-harness/harness`
-   once the factory surface is stable across 2+ scenarios.
+2. **Next:** seeded mission generators (a problem FAMILY, not one problem);
+   graded sandboxing; verifier tool expansion. The archived Flow company
+   (`archive/flow-company` branch) remains the second scenario for the
+   portability test.
 3. **Later:** split packages (`harness-core`, `harness-dbos`, adapters for
    memory/policy backends) only when the seams above have real consumers.
 

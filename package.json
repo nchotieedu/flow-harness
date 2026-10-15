@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/scenarios/flow/server.ts",
+    "dev": "tsx watch src/scenarios/sustain/server.ts",
     "submit": "tsx scripts/submit.ts",
     "inspect": "tsx scripts/inspect-log.ts",
     "test:sandbox": "tsx scripts/test-sandbox.ts",

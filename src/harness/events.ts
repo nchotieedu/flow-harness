@@ -33,6 +33,23 @@ export enum EventType {
   // human-in-the-loop: a privileged action paused for approval
   ApprovalRequested = "approval.requested",
   ApprovalResolved = "approval.resolved",
+  // simulated time: the mission loop advances day by day
+  SimDayStarted = "sim.day.started",
+  // the change stream: requirements arrive, incidents strike
+  RequirementChanged = "requirement.changed",
+  IncidentRaised = "incident.raised",
+  // verification: independent verdicts on completion claims
+  VerificationStarted = "verification.started",
+  VerificationPassed = "verification.passed",
+  VerificationFailed = "verification.failed",
+  VerificationChallenged = "verification.challenged",
+  // resources: compute budget and workspace checkpoints
+  BudgetCharged = "budget.charged",
+  BudgetExhausted = "budget.exhausted",
+  CheckpointTaken = "checkpoint.taken",
+  WorkspaceRestored = "workspace.restored",
+  // the coordinator's durable goal state
+  MissionStateUpdated = "mission.state.updated",
   // free-form harness logging
   Log = "log",
 }
@@ -54,6 +71,18 @@ export type EventInput =
   | { type: EventType.SubagentFailed; workflowId: string; stepId: string; agent: string; error: string }
   | { type: EventType.ApprovalRequested; workflowId: string; toolCallId: string; action: string; args: unknown }
   | { type: EventType.ApprovalResolved; workflowId: string; toolCallId: string; approved: boolean }
+  | { type: EventType.SimDayStarted; workflowId: string; day: number; of: number; due: { id: string; title: string; kind: string }[] }
+  | { type: EventType.RequirementChanged; workflowId: string; day: number; id: string; title: string; detail: string }
+  | { type: EventType.IncidentRaised; workflowId: string; day: number; id: string; title: string; detail: string }
+  | { type: EventType.VerificationStarted; workflowId: string; claimId: string; by: string; claim: string }
+  | { type: EventType.VerificationPassed; workflowId: string; claimId: string; evidence: string }
+  | { type: EventType.VerificationFailed; workflowId: string; claimId: string; evidence: string }
+  | { type: EventType.VerificationChallenged; workflowId: string; claimId: string; evidence: string }
+  | { type: EventType.BudgetCharged; workflowId: string; units: number; reason: string; remaining: number }
+  | { type: EventType.BudgetExhausted; workflowId: string; units: number; limit: number }
+  | { type: EventType.CheckpointTaken; workflowId: string; label: string; ref: string }
+  | { type: EventType.WorkspaceRestored; workflowId: string; to: string }
+  | { type: EventType.MissionStateUpdated; workflowId: string; day: number; state: unknown }
   | { type: EventType.Log; workflowId?: string; level: "info" | "warn" | "error"; message: string };
 
 // The harness stamps every event with an id + timestamp when it emits.

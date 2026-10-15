@@ -1,27 +1,25 @@
-import { config } from "dotenv";
-
-config({ path: ".dev.vars" });
-
 // MUST be first: loads .dev.vars before any module that reads env at load time.
 import "../src/env";
 
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import postgres from "postgres";
 import { ensureSchema } from "@harness/db";
-import { runAgentWorkflow } from "../src/scenarios/flow/workflows";
-import { runSupervisorWorkflow } from "../src/scenarios/flow/workflows";
-import { SAMPLE_TASK } from "../src/scenarios/flow/sample";
+import { sustainMissionWorkflow } from "../src/scenarios/sustain/workflows";
+import { loadMission, DEFAULT_MISSION } from "../src/scenarios/sustain/mission";
+import { SIM_DAY_MS } from "../src/harness/simclock";
 
-// CLI entry point: submit a work item without the web UI.
-//   npm run submit                      → runs SAMPLE_TASK through the CEO loop
-//   npm run submit -- "objective text"  → runs your own task
-//   MODE=supervised npm run submit ...  → runs the supervisor instead
-// Polls the workflow handle until it finishes, then prints the result.
-// Use `npm run inspect` afterwards to see the durable event log.
+// CLI entry point: run a sustain mission without the web UI.
+//   npm run submit                        → runs the default 30-day mission
+//   npm run submit -- mission-sustain-30d → runs a named mission
+//   SIM_DAYS=5 SIM_DAY_MS=5000 npm run submit mission-sustain-30d → smoke run
+//
+// NOTE: missions run against the LIVE event log — `npm run inspect` afterwards
+// shows the full durable timeline.
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
-const task = args.join(" ") || SAMPLE_TASK;
-const supervised = process.env.MODE === "supervised";
+const missionName = args[0] ?? DEFAULT_MISSION;
+
+// Validate the mission BEFORE launching (clear error beats a dead workflow).
+const mission = loadMission(missionName);
 
 async function main() {
   await ensureSchema();
@@ -29,10 +27,11 @@ async function main() {
   DBOS.setConfig({ name: "flow-harness-submit", systemDatabaseUrl: process.env.DATABASE_URL });
   await DBOS.launch();
 
-  const workflow = supervised ? runSupervisorWorkflow : runAgentWorkflow;
-  const handle = await DBOS.startWorkflow(workflow)(task);
-  console.log(`workflow ${handle.workflowID} started (${supervised ? "supervised" : "default"} mode)`);
-  console.log(`task: ${task}\n`);
+  console.log(`mission: ${mission.name} (${mission.horizonDays} sim days @ ${SIM_DAY_MS}ms/day, budget ${mission.budgetUnits} units)`);
+  console.log(`goal: ${mission.goal}\n`);
+
+  const handle = await DBOS.startWorkflow(sustainMissionWorkflow)(missionName);
+  console.log(`workflow ${handle.workflowID} started\n`);
 
   const result = await handle.getResult();
   console.log("── result ──");
@@ -43,6 +42,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("submit failed:", error);
+  console.error("mission failed:", error);
   process.exit(1);
 });

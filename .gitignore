@@ -5,3 +5,6 @@ dist/
 .dev.vars
 *.log
 .DS_Store
+
+# mission workspaces (agent-controlled copies of the repo)
+.workspaces/

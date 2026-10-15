@@ -1,11 +1,11 @@
 # PLAN — Rebuilding Flow on a self-built harness
 
-> Status update (2026-10-15): P1 landed as a **restructure**, not just a port —
-> the repo is now organized for open research (see
-> [ARCHITECTURE.md](ARCHITECTURE.md)). The harness lives in `src/harness`
-> (domain-free factories), Flow lives in `src/scenarios/flow`, research frontiers
-> in `docs/directions/`. Phases below reference the new layout; the model layer
-> is a provider switch (GLM/openai/custom) in `src/harness/model.ts`.
+> Status update (2026-10-15, second pivot): the lab's mission is now
+> **sustained autonomy** — six functional agents keeping an application alive
+> under changing requirements across a configurable horizon, within a fixed
+> compute budget (see research log 002). The Flow company scenario is archived
+> to `archive/flow-company`; the live scenario is `src/scenarios/sustain`.
+> Phase P2 below is OBSOLETE — replaced by the sustain phases at the bottom.
 
 ## Goal
 
@@ -91,3 +91,22 @@ reading only from the durable event log.
 - No real external adapters (publishing, payments) — everything fake-but-realistic.
 - No vertical product — the company scenario stays deliberately boring.
 - Charter is a reduced set of slices, not the full six-document Flow charter.
+
+
+---
+
+## Sustain phases (current)
+
+- **S1 — instrument (DONE):** SimClock, Workspace (isolated real-git clone),
+  BudgetMeter, verifier factory, mission workflow (plan → roles → verify →
+  checkpoint per simulated day), seeded 30-day mission file.
+- **S2 — first full mission (RUNNING):** mission-sustain-30d against this
+  repository itself. Score: verification pass rate, tool calls per role run,
+  budget burn, human interventions (target: 0).
+- **S3 — reliability:** graceful degradation everywhere (fallback plans,
+  judge-unavailable = challenge), failure budgets, resumption drills mid-day.
+- **S4 — generalization:** seeded mission generators → a problem family;
+  compare runs across models (GLM/openai/local via the provider switch).
+- **S5 — governance:** approval-rate vs fatigue studies at plan level vs
+  action level; escalation protocol from the Flow charter, rebuilt on the
+  sustain loop.
