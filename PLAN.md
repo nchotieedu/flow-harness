@@ -3,98 +3,84 @@
 ## Goal
 
 Rebuild the essence of **Flow** (six AI agents running as a self-directing company)
-on top of a **mini agent runtime we build ourselves** — the same way the
-Harness Engineering course builds its harness: one persistent codebase, one
-module per lesson, *the harness is the protagonist*.
+on top of a **mini agent runtime we build ourselves** — starting from the
+**complete harness** the Harness Engineering course ends with, not lesson by lesson.
 
 > Mantra: **agent systems are workflow systems.** The LLM decides the next
 > semantic step; the harness owns execution.
 
-## What we take from Flow, what we rebuild
+## Starting point: the complete course harness
 
-| Keep (the domain) | Rebuild (the runtime) |
+Reference implementation: `Harness-engineering` repo, branch `complete`
+(~830 lines). What the final form gives us, for free:
+
+| Module | Final-takeaway mechanism |
 |---|---|
-| Company scenario: objectives, work items, messages, escalations | Scheduler / executor loop |
-| Charter-driven prompts (mission, contracts, governance) | Durable state store + event log |
-| Guardrail idea (G1–G8) | Tool policy / sandboxing |
-| Shared memory with ownership & attribution | Memory + context hydration |
-| Agent-to-agent messaging | Router + typed handoffs |
-| CEO → department org, Quality-led review | Supervisor (fan-out / fan-in) |
-| Human protocol: escalations, pause | Approval store: suspend / resume |
+| `runtime.ts` | The spine: `runWorkflow` → model turn → tool steps, `MAX_STEPS`, approval gate on dangerous tools |
+| DBOS | Durable workflows: exactly-once tool steps, checkpoint/resume, `kill -9` survival, suspend/resume |
+| `bus.ts` + `db.ts` | Durable event log (Drizzle/Postgres, JSONB rows) — replayable timeline |
+| `agents.ts` | `Agent` type: name, system prompt, tool surface; triage agent routes to specialists |
+| `memory.ts` | Context hydration with token budget (`MAX_CONTEXT_TOKENS`), summarization |
+| `sandbox.ts` | `runInSandbox` — tools execute behind a policy boundary |
+| `supervisor.ts` | Registered DBOS workflow: fan-out to sub-agents, fan-in aggregation |
+| `tools.ts` | Safe/dangerous tool split with `NEEDS_APPROVAL` set |
 
-## The spine (every lesson fills in one line)
+Flow's own architecture (scheduler, guardrails G1–G8, charter-compiled prompts,
+SQLite memory, escalations) is the **domain** we pour into this runtime.
 
-```ts
-async function runCycle(cycleId, input) {
-  const state  = await stateStore.load(cycleId);          // L2 durable
-  while (!state.done) {
-    const context = await hydrateContext(state);           // L4 memory
-    const step    = await agent.next(context);             // LLM decides
-    await policy.check(step);                              // L3 sandbox
-    await eventLog.append(cycleId, step);                  // L2 durable
-    const result = await executeStep(step);                // tools / handoff / approval
-    await stateStore.checkpoint(cycleId, result);          // L2 durable
-  }
-}
-```
+## Stack (same as the final harness)
 
-## Milestones — one lesson, one module, one Flow mechanism
+- Node.js + TypeScript, run with `tsx` (no build step)
+- Vercel AI SDK (`streamText`), server-side only
+- **DBOS SDK** for durable workflow execution (replaces hand-rolled StateStore)
+- Postgres + Drizzle for the durable event log (local Postgres or Neon — Flow used SQLite; DBOS needs Postgres, that's the tradeoff)
+- Express + one WebSocket; inspector as pure projection of the event stream
 
-### L1 — The spine (Intro)
-- `runAgent` stub filled in: single **CEO agent**, one work item, end-to-end.
-- Fake-but-realistic tools: `readInbox`, `updateObjective`, `assignWorkItem`,
-  `sendMessage`, `draftProduct` (safe); `publishProduct`, `spendBudget` (dangerous).
-- Observation: console event stream (inspector comes later).
-- **Done:** browser-independent loop; one work item processed; events logged.
+## Build order — vertical phases, one `main`
 
-### L2 — Durable execution
-- `state.ts`: SQLite-backed `StateStore` (checkpoint / load / resume), append-only
-  event log. Kill the process mid-cycle → resume exactly where it stopped.
-- Maps to Flow's scheduler + `flow.db` (WAL).
-- **Done:** crash test — `kill -9` mid-cycle, restart, cycle completes.
+No lesson branches. Each phase ends with a working demo.
 
-### L3 — Secure sandboxing
-- `policies.ts`: `ToolPolicy` intercepting every tool call — per-agent tool
-  access table, budget limits, publish-hook. Rebuild of Flow's guardrails.
-- **Done:** `publishProduct` blocked for non-CEO agents; blocked calls logged as incidents.
+### P1 — Port the skeleton
+Copy the complete harness modules into `flow-harness`, strip the course domain
+(billing/refund/triage-as-is), keep the spine green: `npm run typecheck` passes,
+one fake work item flows end-to-end, events land in the durable log.
 
-### L4 — Advanced memory
-- `memory.ts`: `Memory` + `ContextHydrator` — shared SQLite collections with
-  ownership/attribution; context compiled per agent (constitution slice + live context).
-- Maps to Flow's charter compilation + memory store.
-- **Done:** two agents share a memory collection; prompt lineage stamped with charter version.
+### P2 — Flow domain model
+- Six agents from Flow's org: `ceo`, `product`, `tech`, `growth`, `ops`, `quality` —
+  each an `Agent` with its own charter slice as system prompt.
+- Tables: `work_items`, `objectives`, `messages` (sender, recipient, priority).
+- **Done:** CEO agent processes one work item against the durable log.
 
-### L5 — Orchestration, routing, handoffs
-- `router.ts`: `Router` + typed `Handoff` — agents message each other; work items
-  route CEO → tech/growth/ops; `priority: critical` wakes the recipient immediately.
-- **Done:** a work item hops CEO → tech → done, with a full message trail.
+### P3 — Routing & handoffs
+Replace the triage agent with Flow's org routing: CEO assigns work items to
+departments (`assignWorkItem` handoff); `priority: critical` messages wake the
+recipient immediately (scheduler triggers → `runWorkflow` resume).
+- **Done:** work item hops CEO → tech → done with a full message trail.
 
-### L6 — Hierarchical supervision
-- `supervisor.ts`: `Supervisor` fan-out/fan-in — CEO spawns department agents in
-  parallel, Quality reviews results, supervisor aggregates.
+### P4 — Hierarchical supervision
+Adapt `runSupervisorWorkflow`: CEO fans out an objective to department agents in
+parallel, `quality` reviews each result, supervisor aggregates before fan-in.
 - **Done:** one objective fanned out to 3 departments, reviewed, aggregated.
 
-### L7 — Human in the loop
-- `approvals.ts`: `ApprovalStore` — dangerous tools suspend the workflow, human
-  approves/rejects via dashboard (or CLI), workflow resumes — possibly days later.
-- Maps to Flow's escalations + pause controls.
-- **Done:** `spendBudget` suspends; approve → resumes; reject → clean failure, logged.
+### P5 — Sandbox & policy
+Rebuild Flow's guardrails on `runInSandbox` + per-role tool access:
+`publishProduct`, `spendBudget` are CEO-only and dangerous; blocked calls log
+incidents. Tools: `readInbox`, `updateObjective`, `assignWorkItem`, `sendMessage`,
+`draftProduct` (safe) / `publishProduct`, `spendBudget` (dangerous).
+- **Done:** non-CEO `publishProduct` blocked and logged as an incident.
 
-## Tech stack
+### P6 — Human in the loop
+`NEEDS_APPROVAL = { publishProduct, spendBudget }` → DBOS suspend; human
+approves/rejects via dashboard (or CLI first); resume — possibly days later.
+Mirrors Flow's human protocol: governance through escalations, not management.
+- **Done:** `spendBudget` suspends; approve → resumes; reject → clean, logged failure.
 
-- **Runtime:** Node.js + TypeScript, run with `tsx` (no build step) — same as the course.
-- **LLM:** OpenAI via Vercel AI SDK (`streamText`), server-side only.
-- **State:** SQLite (WAL) — `better-sqlite3`.
-- **Transport (later):** one WebSocket — client→server commands, server→client event stream.
-- **Dashboard:** small Vite/React inspector as pure projection of the event stream (stretch goal, L7).
-
-## Branching strategy
-
-Like the course: `lesson-1` → … → `lesson-7` → `main`. Each branch adds exactly
-one harness module; the next branch includes the previous solution.
+### P7 — Inspector
+Port the course's `web/` inspector: step timeline, agent tree, approval modal —
+reading only from the durable event log.
 
 ## Non-goals (for now)
 
 - No real external adapters (publishing, payments) — everything fake-but-realistic.
 - No vertical product — the company scenario stays deliberately boring.
-- Dashboard is a projection, never taught/built in depth.
+- Charter is a reduced set of slices, not the full six-document Flow charter.
