@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { runInSandbox, type SandboxApi } from "./sandbox";
+import { runInSandbox, type SandboxApi } from "@harness/sandbox";
 
 // ── Canned data the read tools serve ────────────────────────────────────────
 //
@@ -109,6 +109,9 @@ export const tools = {
 // `runCode` is mediated: it never runs in the host process, only in the sandbox.
 // The side-effecting tools (sendMessage, spendBudget) run here as normal
 // durable steps.
+// Tools a human must approve before they run (HITL, wired into the workflow).
+export const DANGEROUS_TOOLS = new Set(["spendBudget"]);
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,

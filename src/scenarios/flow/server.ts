@@ -1,17 +1,17 @@
 // MUST be first: loads .dev.vars before any module that reads env at load time.
-import "./env";
+import "../../env";
 
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import express from "express";
 import { createServer } from "node:http";
 import { WebSocketServer, type WebSocket } from "ws";
-import { ensureSchema, clearEventLog } from "../harness/db";
-import { subscribe, history } from "../harness/bus";
-import { runAgentWorkflow } from "../harness/runtime";
-import { runSupervisorWorkflow } from "../harness/supervisor";
-import type { ClientMessage } from "@shared/events";
+import { ensureSchema, clearEventLog } from "@harness/db";
+import { subscribe, history } from "@harness/bus";
+import { runAgentWorkflow } from "./workflows";
+import { runSupervisorWorkflow } from "./workflows";
+import type { ClientMessage } from "@harness/events";
 
-const PORT = Number(process.env.PORT ?? 8787);
+const PORT = Number(process.env.PORT ?? 8797);
 
 async function main() {
   await ensureSchema();

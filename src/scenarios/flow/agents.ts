@@ -1,15 +1,7 @@
-import type { ToolSet } from "ai";
+import type { Agent } from "@harness/agent";
 import { tools } from "./tools";
 
-// An agent is just a name, a system prompt, and the subset of tools it's allowed
-// to use. The runtime runs ANY agent through the same durable loop — so adding
-// a department is data, not new machinery. (P2 adds the full six-agent org.)
-
-export type Agent = {
-  name: string;
-  systemPrompt: string;
-  tools: ToolSet;
-};
+// The Flow company cast. (P2 adds the full six-agent org.)
 
 // The generalist. Note what it does NOT have: spendBudget. It can talk about
 // spending, but it isn't allowed to move money — that's the whole reason it
@@ -61,3 +53,6 @@ export const agents: Record<string, Agent> = {
   ceo: ceoAgent,
   tech: techAgent,
 };
+
+// Who picks up a task first.
+export const ENTRY_AGENT = ceoAgent;

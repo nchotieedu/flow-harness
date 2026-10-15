@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { db, eventLog } from "./db";
-import type { AgentEvent, EventInput } from "@shared/events";
+import type { AgentEvent, EventInput } from "@harness/events";
 
 // The harness event bus. Two jobs now:
 //   1. DURABLY persist every event to Postgres (so the timeline survives a crash)

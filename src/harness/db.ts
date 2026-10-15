@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { pgTable, bigserial, jsonb } from "drizzle-orm/pg-core";
-import type { AgentEvent } from "@shared/events";
+import type { AgentEvent } from "@harness/events";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {

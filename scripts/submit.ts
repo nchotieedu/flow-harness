@@ -3,14 +3,14 @@ import { config } from "dotenv";
 config({ path: ".dev.vars" });
 
 // MUST be first: loads .dev.vars before any module that reads env at load time.
-import "./env";
+import "../src/env";
 
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import postgres from "postgres";
-import { ensureSchema } from "../harness/db";
-import { runAgentWorkflow } from "../harness/runtime";
-import { runSupervisorWorkflow } from "../harness/supervisor";
-import { SAMPLE_TASK } from "../harness/system-prompt";
+import { ensureSchema } from "@harness/db";
+import { runAgentWorkflow } from "../src/scenarios/flow/workflows";
+import { runSupervisorWorkflow } from "../src/scenarios/flow/workflows";
+import { SAMPLE_TASK } from "../src/scenarios/flow/sample";
 
 // CLI entry point: submit a work item without the web UI.
 //   npm run submit                      → runs SAMPLE_TASK through the CEO loop

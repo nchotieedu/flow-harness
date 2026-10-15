@@ -1,5 +1,12 @@
 # PLAN — Rebuilding Flow on a self-built harness
 
+> Status update (2026-10-15): P1 landed as a **restructure**, not just a port —
+> the repo is now organized for open research (see
+> [ARCHITECTURE.md](ARCHITECTURE.md)). The harness lives in `src/harness`
+> (domain-free factories), Flow lives in `src/scenarios/flow`, research frontiers
+> in `docs/directions/`. Phases below reference the new layout; the model layer
+> is a provider switch (GLM/openai/custom) in `src/harness/model.ts`.
+
 ## Goal
 
 Rebuild the essence of **Flow** (six AI agents running as a self-directing company)

@@ -1,6 +1,6 @@
 import { generateText, stepCountIs, tool, type ToolSet } from "ai";
 import { z } from "zod";
-import { model } from "./model";
+import { model } from "@harness/model";
 import { WORK_ITEMS, searchDocs } from "./tools";
 
 // Sub-agents are read-only INVESTIGATORS. Their tools have `execute`, so the AI
@@ -19,6 +19,9 @@ const searchCompanyDocs = tool({
 });
 
 type Investigator = { systemPrompt: string; tools: ToolSet };
+
+// The departments a supervisor plan may dispatch to.
+export const DEPARTMENTS = ["tech", "growth", "ops"] as const;
 
 const INVESTIGATORS: Record<string, Investigator> = {
   tech: {

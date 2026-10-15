@@ -1,4 +1,4 @@
-import { runInSandbox, type SandboxApi } from "../harness/sandbox";
+import { runInSandbox, type SandboxApi } from "../src/harness/sandbox";
 
 // Demonstrates the sandbox guardrails directly, without needing the agent to
 // misbehave. Run: npx tsx scripts/test-sandbox.ts
