@@ -1,0 +1,31 @@
+{
+  "name": "flow-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "submit": "tsx scripts/submit.ts",
+    "inspect": "tsx scripts/inspect-log.ts",
+    "test:sandbox": "tsx scripts/test-sandbox.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.70",
+    "@dbos-inc/dbos-sdk": "^4.19.8",
+    "ai": "^6.0.202",
+    "dotenv": "^17.2.0",
+    "drizzle-orm": "^0.45.2",
+    "express": "^5.1.0",
+    "postgres": "^3.4.9",
+    "ws": "^8.18.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}

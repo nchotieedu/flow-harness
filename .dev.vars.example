@@ -1,0 +1,7 @@
+# Copy to .dev.vars and fill in.
+# OPENAI_API_KEY  — required (the provider reads it at request time).
+# DATABASE_URL    — your local Postgres. DBOS needs the DIRECT connection.
+# MODEL_ID        — optional override (default: gpt-5.5).
+
+OPENAI_API_KEY=sk-...
+DATABASE_URL=postgresql://cliford@localhost:5432/flow_harness
